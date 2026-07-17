@@ -65,9 +65,10 @@ SECTION_H = (TEXT_H - MIDDLE_GAP) / 2.0
 BODY_FONT = "Times-Roman"
 BODY_SIZE = 10.0
 BODY_LEADING = 12.0
+FONT_SIZE_ADJUSTMENT_FACTOR = 0.239
 # Allow roughly ±23.9% size adjustment to keep each chapter balanced.
-MIN_BODY_SIZE = BODY_SIZE * 0.761
-MAX_BODY_SIZE = BODY_SIZE * 1.239
+MIN_BODY_SIZE = BODY_SIZE * (1.0 - FONT_SIZE_ADJUSTMENT_FACTOR)
+MAX_BODY_SIZE = BODY_SIZE * (1.0 + FONT_SIZE_ADJUSTMENT_FACTOR)
 HEADER_FONT = "Helvetica-Bold"
 HEADER_SIZE = 9.5
 HEADER_SMALL_SIZE = 7.0
@@ -76,9 +77,10 @@ HEADER_SMALL_SIZE = 7.0
 SPLIT_RADIUS = 120
 MAX_SPLIT_ITERATIONS = 200
 FONT_SIZE_SEARCH_ITERATIONS = 12
-MIN_SECTION_FILL_RATIO = 0.618
-TARGET_COMBINED_FILL_RATIO = MIN_SECTION_FILL_RATIO * 2.0
+SECTION_FILL_TARGET_RATIO = 0.618
+TARGET_COMBINED_FILL_RATIO = SECTION_FILL_TARGET_RATIO * 2.0
 MAX_LAYOUT_HEIGHT = 10_000
+WORD_CHUNK_DIVISOR = 6
 CONTINUATION_MARKER = "—"
 
 CHAPTER_ANCHOR_RE = re.compile(
@@ -87,7 +89,7 @@ CHAPTER_ANCHOR_RE = re.compile(
 )
 
 _INVALID_TEXT_RE = re.compile(r"[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]")
-SENTENCE_BOUNDARY_RE = re.compile(r'[.!?]["\'”’)\]]*\s+')
+_SENTENCE_BOUNDARY_RE = re.compile(r'[.!?]["\'”’)\]]*\s+')
 
 
 def read_text(path: Path) -> str:
@@ -241,7 +243,7 @@ def sentence_units(text: str) -> list[str]:
     """Split text into sentence-like units while preserving punctuation."""
     units: list[str] = []
     start = 0
-    for match in SENTENCE_BOUNDARY_RE.finditer(text):
+    for match in _SENTENCE_BOUNDARY_RE.finditer(text):
         end = match.end()
         units.append(text[start:end].strip())
         start = end
@@ -265,7 +267,7 @@ def take_tail(text: str) -> tuple[str, str]:
         words = text.split()
         if len(words) <= 1:
             return "", text.strip()
-        take = max(1, len(words) // 6)
+        take = max(1, len(words) // WORD_CHUNK_DIVISOR)
         head = " ".join(words[:-take]).strip()
         tail = " ".join(words[-take:]).strip()
         return head, tail
@@ -282,7 +284,7 @@ def take_head(text: str) -> tuple[str, str]:
         words = text.split()
         if len(words) <= 1:
             return text.strip(), ""
-        take = max(1, len(words) // 6)
+        take = max(1, len(words) // WORD_CHUNK_DIVISOR)
         head = " ".join(words[:take]).strip()
         tail = " ".join(words[take:]).strip()
         return head, tail
@@ -309,7 +311,7 @@ def natural_boundary_positions(text: str) -> list[tuple[int, int]]:
     candidates: list[tuple[int, int]] = []
     patterns = [
         (0, re.compile(r"\n\s*\n+")),
-        (1, SENTENCE_BOUNDARY_RE),
+        (1, _SENTENCE_BOUNDARY_RE),
         (2, re.compile(r"[,;:]\s+")),
         (3, re.compile(r"\s+")),
     ]
@@ -496,7 +498,7 @@ def build_pdf(output_path: Path) -> None:
     chapters_by_translation = load_all_chapters()
     pdf = canvas.Canvas(str(output_path), pagesize=letter)
     pdf.setTitle("Tao Te Ching Parallel Translation")
-    pdf.setAuthor("MysteriousJz")
+    pdf.setAuthor(ROOT.name)
 
     for chapter_number in chapter_number_order():
         page_data = []
