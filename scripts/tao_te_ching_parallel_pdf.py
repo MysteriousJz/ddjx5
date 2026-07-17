@@ -20,7 +20,7 @@ import io
 import re
 import unicodedata
 from pathlib import Path
-from typing import Sequence, Tuple
+from typing import Sequence
 
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import letter
@@ -98,8 +98,8 @@ def extract_chapter_segments(raw_html: str) -> dict[int, str]:
 
 def strip_html_to_text(fragment: str) -> str:
     """Convert a chapter HTML fragment into normalized plain text."""
-    fragment = re.sub(r"(?is)<script\b.*?</script\s*>", " ", fragment)
-    fragment = re.sub(r"(?is)<style\b.*?</style\s*>", " ", fragment)
+    fragment = re.sub(r"(?is)<script\b[^>]*>.*?<\s*/\s*script\s*>", " ", fragment)
+    fragment = re.sub(r"(?is)<style\b[^>]*>.*?<\s*/\s*style\s*>", " ", fragment)
     fragment = fragment.replace("\r", "\n")
     fragment = re.sub(r"(?i)<br\s*/?>", "\n", fragment)
     fragment = re.sub(r"(?i)</p\s*>", "\n\n", fragment)
@@ -224,7 +224,7 @@ def split_units(text: str) -> list[str]:
     return [word for word in text.split() if word]
 
 
-def take_tail(text: str) -> Tuple[str, str]:
+def take_tail(text: str) -> tuple[str, str]:
     """Move the smallest sensible tail from a paragraph to the next section."""
     units = split_units(text)
     if len(units) <= 1:
@@ -241,7 +241,7 @@ def take_tail(text: str) -> Tuple[str, str]:
     return head, tail
 
 
-def take_head(text: str) -> Tuple[str, str]:
+def take_head(text: str) -> tuple[str, str]:
     """Move the smallest sensible head from a paragraph to the previous section."""
     units = split_units(text)
     if len(units) <= 1:
@@ -462,7 +462,7 @@ def build_pdf(output_path: Path) -> None:
     chapters_by_translation = load_all_chapters()
     pdf = canvas.Canvas(str(output_path), pagesize=letter)
     pdf.setTitle("Tao Te Ching Parallel Translation")
-    pdf.setAuthor("Copilot Task Agent")
+    pdf.setAuthor("MysteriousJz")
 
     for chapter_number in chapter_number_order():
         page_data = []
