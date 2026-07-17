@@ -18,10 +18,11 @@ import argparse
 import html as html_lib
 import io
 import re
+import unicodedata
 from pathlib import Path
-from typing import Iterable, List, Sequence, Tuple
+from typing import Sequence, Tuple
 
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
@@ -56,11 +57,14 @@ COLUMN_COUNT = 5
 TEXT_W = PAGE_W - (2 * MARGIN)
 TEXT_H = PAGE_H - (2 * MARGIN)
 COLUMN_W = (TEXT_W - (COLUMN_COUNT - 1) * GUTTER) / COLUMN_COUNT
-SECTION_H = TEXT_H / 2.0
+MIDDLE_GAP = 0.42 * inch
+SECTION_H = (TEXT_H - MIDDLE_GAP) / 2.0
 
 BODY_FONT = "Times-Roman"
 BODY_SIZE = 10.0
 BODY_LEADING = 12.0
+MIN_BODY_SIZE = BODY_SIZE * 0.761
+MAX_BODY_SIZE = BODY_SIZE * 1.239
 HEADER_FONT = "Helvetica-Bold"
 HEADER_SIZE = 9.5
 HEADER_SMALL_SIZE = 7.0
@@ -72,6 +76,8 @@ CHAPTER_ANCHOR_RE = re.compile(
     r'<a\b[^>]*name\s*=\s*["\']?Kap(\d{1,2})["\']?[^>]*>',
     re.IGNORECASE,
 )
+
+_INVALID_TEXT_RE = re.compile(r"[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]")
 
 
 def read_text(path: Path) -> str:
@@ -129,11 +135,29 @@ def strip_html_to_text(fragment: str) -> str:
     return text
 
 
+def sanitize_text(text: str) -> str:
+    """Remove corrupted glyphs while preserving readable prose and diacritics."""
+    text = unicodedata.normalize("NFKC", text)
+    text = _INVALID_TEXT_RE.sub("", text)
+    cleaned: list[str] = []
+    for char in text:
+        if char in "\n\r\t":
+            cleaned.append(char)
+            continue
+        category = unicodedata.category(char)
+        if category[0] in {"L", "N", "P", "Z", "M"}:
+            cleaned.append(char)
+    text = "".join(cleaned)
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def chapter_text_for_number(raw_html: str, chapter_number: int) -> str:
     segments = extract_chapter_segments(raw_html)
     if chapter_number not in segments:
         raise ValueError(f"Missing chapter {chapter_number}")
-    return strip_html_to_text(segments[chapter_number])
+    return sanitize_text(strip_html_to_text(segments[chapter_number]))
 
 
 def to_paragraphs(text: str) -> list[str]:
@@ -153,6 +177,16 @@ def fit_flowables(paragraphs: Sequence[str], style: ParagraphStyle, frame_w: flo
     remaining = list(flowables)
     frame.addFromList(remaining, tmp)
     return not remaining
+
+
+def rendered_height(paragraphs: Sequence[str], style: ParagraphStyle, frame_w: float) -> float:
+    """Measure the rendered height of paragraphs at a given width."""
+    total = 0.0
+    for paragraph in paragraphs:
+        flowable = Paragraph(paragraph_markup(paragraph), style)
+        _, height = flowable.wrap(frame_w, 10_000)
+        total += height
+    return total
 
 
 def sentence_units(text: str) -> list[str]:
@@ -210,6 +244,18 @@ def take_head(text: str) -> Tuple[str, str]:
     return head, tail
 
 
+def style_for_size(font_size: float) -> ParagraphStyle:
+    return ParagraphStyle(
+        "body",
+        fontName=BODY_FONT,
+        fontSize=font_size,
+        leading=font_size * 1.2,
+        alignment=TA_LEFT,
+        spaceAfter=3,
+        splitLongWords=0,
+    )
+
+
 def natural_boundary_positions(text: str) -> list[tuple[int, int]]:
     """Return candidate split positions with priority and position."""
     candidates: list[tuple[int, int]] = []
@@ -238,39 +284,69 @@ def choose_split_position(text: str, target: int, radius: int = SPLIT_RADIUS) ->
     return max(0, min(len(text), target))
 
 
-def split_chapter_for_page(chapter_text: str, frame_w: float, frame_h: float) -> tuple[list[str], list[str]]:
-    """Split a chapter into top and bottom paragraphs that fit their sections."""
-    paragraphs = to_paragraphs(chapter_text)
-    if not paragraphs:
-        return [], []
+def chapter_units(chapter_text: str) -> list[str]:
+    units: list[str] = []
+    for paragraph in to_paragraphs(chapter_text):
+        paragraph_units = split_units(paragraph)
+        if paragraph_units:
+            units.extend(paragraph_units)
+    return units if units else [chapter_text.strip()]
 
-    flat = "\n\n".join(paragraphs)
+
+def split_chapter_for_page(
+    chapter_text: str,
+    frame_w: float,
+    frame_h: float,
+    font_size: float,
+) -> tuple[list[str], list[str]]:
+    """Split a chapter into top and bottom sections that both render."""
+    units = chapter_units(chapter_text)
+    if len(units) == 1:
+        head, tail = take_head(units[0])
+        return ([head] if head else [units[0]], [tail] if tail else [])
+
+    style = style_for_size(font_size)
+    best: tuple[float, int, list[str], list[str]] | None = None
+
+    for split_index in range(1, len(units)):
+        top = units[:split_index]
+        bottom = units[split_index:]
+        if not top or not bottom:
+            continue
+        if not fit_flowables(top, style, frame_w, frame_h):
+            continue
+        if not fit_flowables(bottom, style, frame_w, frame_h):
+            continue
+
+        top_height = rendered_height(top, style, frame_w)
+        bottom_height = rendered_height(bottom, style, frame_w)
+        balance = abs(top_height - bottom_height)
+        fill_penalty = abs(max(top_height, bottom_height) / frame_h - 0.618)
+        score = balance + fill_penalty * frame_h
+        candidate = (score, split_index, top, bottom)
+        if best is None or candidate < best:
+            best = candidate
+
+    if best is not None:
+        return best[2], best[3]
+
+    # Fallback: refine a midpoint split until it fits both halves.
+    flat = "\n\n".join(to_paragraphs(chapter_text))
     target = round(len(flat) * 0.5)
     split_at = choose_split_position(flat, target)
-
-    top_text = flat[:split_at].strip()
-    bottom_text = flat[split_at:].strip()
-    top = to_paragraphs(top_text)
-    bottom = to_paragraphs(bottom_text)
-
-    style = ParagraphStyle(
-        "body",
-        fontName=BODY_FONT,
-        fontSize=BODY_SIZE,
-        leading=BODY_LEADING,
-        alignment=TA_LEFT,
-        spaceAfter=3,
-        splitLongWords=0,
-    )
-
-    # Refine the split until both halves fit.
+    top = to_paragraphs(flat[:split_at].strip())
+    bottom = to_paragraphs(flat[split_at:].strip())
     for _ in range(200):
-        top_fits = fit_flowables(top, style, frame_w, frame_h)
-        bottom_fits = fit_flowables(bottom, style, frame_w, frame_h)
-        if top_fits and bottom_fits:
+        if top and bottom and fit_flowables(top, style, frame_w, frame_h) and fit_flowables(bottom, style, frame_w, frame_h):
             break
-
-        if not top_fits and top:
+        if not top and bottom:
+            head, tail = take_head(bottom[0])
+            top = [head] if head else [bottom[0]]
+            bottom = bottom[1:]
+            if tail:
+                bottom.insert(0, tail)
+            continue
+        if not bottom and top:
             head, tail = take_tail(top[-1])
             top.pop()
             if head:
@@ -278,8 +354,15 @@ def split_chapter_for_page(chapter_text: str, frame_w: float, frame_h: float) ->
             if tail:
                 bottom.insert(0, tail)
             continue
-
-        if not bottom_fits and bottom:
+        if not fit_flowables(top, style, frame_w, frame_h) and top:
+            head, tail = take_tail(top[-1])
+            top.pop()
+            if head:
+                top.append(head + (f" {CONTINUATION_MARKER}" if tail else ""))
+            if tail:
+                bottom.insert(0, tail)
+            continue
+        if not fit_flowables(bottom, style, frame_w, frame_h) and bottom:
             head, tail = take_head(bottom[0])
             bottom.pop(0)
             if head:
@@ -287,16 +370,12 @@ def split_chapter_for_page(chapter_text: str, frame_w: float, frame_h: float) ->
             if tail:
                 bottom.insert(0, tail)
             continue
-
         break
-
-    if not top and bottom:
-        head, tail = take_head(bottom[0])
-        top = [head] if head else [bottom[0]]
-        bottom = bottom[1:]
+    if not bottom and top:
+        head, tail = take_tail(top[-1])
         if tail:
-            bottom.insert(0, tail)
-
+            top[-1] = head
+            bottom = [tail]
     return top, bottom
 
 
@@ -309,39 +388,31 @@ def load_all_chapters() -> list[dict[int, str]]:
     for path in INPUT_FILES:
         raw = read_text(path)
         segments = extract_chapter_segments(raw)
-        parsed = {number: strip_html_to_text(segment) for number, segment in segments.items()}
+        parsed = {number: sanitize_text(strip_html_to_text(segment)) for number, segment in segments.items()}
         chapters_by_translation.append(parsed)
     return chapters_by_translation
 
 
 def make_body_style() -> ParagraphStyle:
-    return ParagraphStyle(
-        "body",
-        fontName=BODY_FONT,
-        fontSize=BODY_SIZE,
-        leading=BODY_LEADING,
-        alignment=TA_LEFT,
-        spaceAfter=3,
-        splitLongWords=0,
-    )
+    return style_for_size(BODY_SIZE)
 
 
 def render_page(
     pdf: canvas.Canvas,
     chapter_number: int,
-    per_translation: Sequence[tuple[str, list[str], list[str]]],
+    per_translation: Sequence[tuple[str, float, list[str], list[str]]],
 ) -> None:
     left_x = MARGIN
     bottom_y = MARGIN
-    top_y = MARGIN + SECTION_H
+    top_y = MARGIN + SECTION_H + MIDDLE_GAP
     top_label_y = PAGE_H - 0.19 * inch
     top_small_y = PAGE_H - 0.31 * inch
     section_line_y = MARGIN + SECTION_H
-    body_style = make_body_style()
 
-    for index, (translation, top_paragraphs, bottom_paragraphs) in enumerate(per_translation):
+    for index, (translation, font_size, top_paragraphs, bottom_paragraphs) in enumerate(per_translation):
         x = left_x + index * (COLUMN_W + GUTTER)
         center_x = x + (COLUMN_W / 2.0)
+        body_style = style_for_size(font_size)
 
         pdf.setFont(HEADER_FONT, HEADER_SIZE)
         pdf.drawCentredString(center_x, top_label_y, f"Chapter {chapter_number}")
@@ -379,10 +450,8 @@ def render_page(
         pdf.setLineWidth(0.4)
         pdf.setStrokeColorRGB(0.55, 0.55, 0.55)
         pdf.line(x, section_line_y, x + COLUMN_W, section_line_y)
+        pdf.line(x, section_line_y + MIDDLE_GAP, x + COLUMN_W, section_line_y + MIDDLE_GAP)
 
-    pdf.setStrokeColorRGB(0.82, 0.82, 0.82)
-    pdf.setLineWidth(0.3)
-    pdf.line(MARGIN, section_line_y, PAGE_W - MARGIN, section_line_y)
     pdf.showPage()
 
 
@@ -398,11 +467,31 @@ def build_pdf(output_path: Path) -> None:
             if chapter_number not in chapter_map:
                 raise ValueError(f"{translation} is missing chapter {chapter_number}")
             chapter_text = chapter_map[chapter_number]
-            top, bottom = split_chapter_for_page(chapter_text, COLUMN_W, SECTION_H)
-            if not top and bottom:
-                top = [bottom[0]]
-                bottom = bottom[1:]
-            page_data.append((translation, top, bottom))
+            best_layout = None
+            font_sizes = [round(MAX_BODY_SIZE - step * 0.25, 3) for step in range(int((MAX_BODY_SIZE - MIN_BODY_SIZE) / 0.25) + 1)]
+            for font_size in font_sizes:
+                top, bottom = split_chapter_for_page(chapter_text, COLUMN_W, SECTION_H, font_size)
+                if not top or not bottom:
+                    continue
+                style = style_for_size(font_size)
+                if not fit_flowables(top, style, COLUMN_W, SECTION_H):
+                    continue
+                if not fit_flowables(bottom, style, COLUMN_W, SECTION_H):
+                    continue
+                top_fill = rendered_height(top, style, COLUMN_W) / SECTION_H
+                bottom_fill = rendered_height(bottom, style, COLUMN_W) / SECTION_H
+                balance = abs(top_fill - bottom_fill)
+                fill_distance = abs(min(top_fill, bottom_fill) - 0.618)
+                score = balance + fill_distance
+                candidate = (score, font_size, top, bottom)
+                if best_layout is None or candidate < best_layout:
+                    best_layout = candidate
+            if best_layout is None:
+                top, bottom = split_chapter_for_page(chapter_text, COLUMN_W, SECTION_H, BODY_SIZE)
+                font_size = BODY_SIZE
+            else:
+                _, font_size, top, bottom = best_layout
+            page_data.append((translation, font_size, top, bottom))
         render_page(pdf, chapter_number, page_data)
 
     pdf.save()
