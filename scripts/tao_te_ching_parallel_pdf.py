@@ -89,7 +89,7 @@ CHAPTER_ANCHOR_RE = re.compile(
 )
 
 _INVALID_TEXT_RE = re.compile(r"[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]")
-_SENTENCE_BOUNDARY_RE = re.compile(r'[.!?]["\'”’)\]]*\s+')
+_SENTENCE_BOUNDARY_RE = re.compile(r'[.!?]["\')\]]*\s+')
 
 
 def read_text(path: Path) -> str:
@@ -174,6 +174,7 @@ def _strip_tag_blocks(fragment: str, tag: str) -> str:
 def sanitize_text(text: str) -> str:
     """Remove corrupted glyphs while preserving readable prose and diacritics."""
     text = unicodedata.normalize("NFKC", text)
+    text = text.translate(str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'"}))
     text = _INVALID_TEXT_RE.sub(" ", text)
     cleaned: list[str] = []
     for char in text:
@@ -181,6 +182,7 @@ def sanitize_text(text: str) -> str:
             cleaned.append(char)
             continue
         category = unicodedata.category(char)
+        # L/N/P/Z/M are Letters, Numbers, Punctuation, Separators, and Marks.
         if category[0] in {"L", "N", "P", "Z", "M"}:
             cleaned.append(char)
         else:
@@ -266,7 +268,8 @@ def take_tail(text: str) -> tuple[str, str]:
     if len(units) <= 1:
         words = text.split()
         if len(words) <= 1:
-            return "", text.strip()
+            midpoint = max(1, len(text) // 2)
+            return text[:midpoint].strip(), text[midpoint:].strip()
         take = max(1, len(words) // WORD_CHUNK_DIVISOR)
         head = " ".join(words[:-take]).strip()
         tail = " ".join(words[-take:]).strip()
@@ -283,7 +286,8 @@ def take_head(text: str) -> tuple[str, str]:
     if len(units) <= 1:
         words = text.split()
         if len(words) <= 1:
-            return text.strip(), ""
+            midpoint = max(1, len(text) // 2)
+            return text[:midpoint].strip(), text[midpoint:].strip()
         take = max(1, len(words) // WORD_CHUNK_DIVISOR)
         head = " ".join(words[:take]).strip()
         tail = " ".join(words[take:]).strip()
@@ -498,7 +502,7 @@ def build_pdf(output_path: Path) -> None:
     chapters_by_translation = load_all_chapters()
     pdf = canvas.Canvas(str(output_path), pagesize=letter)
     pdf.setTitle("Tao Te Ching Parallel Translation")
-    pdf.setAuthor(ROOT.name)
+    pdf.setAuthor("Tao Te Ching Parallel Translation Generator")
 
     for chapter_number in chapter_number_order():
         page_data = []
