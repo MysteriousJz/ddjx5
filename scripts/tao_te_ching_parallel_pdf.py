@@ -6,7 +6,7 @@ The script reads the provided HTML sources, extracts the 81 chapter blocks from 
 splits each chapter into a top and bottom half using a character target plus visual fit
 checks, and writes a single PDF book in the fixed chapter order:
 
-    38..81, then 1..37
+38-81, then 1-37
 
 The output is intended for the five HTML files shipped with this repository, but the
 parsing logic is resilient to the anchor and line-break variations present in those files.
@@ -68,6 +68,7 @@ BODY_SIZE = 10.0
 BODY_LEADING = 12.0
 FONT_SIZE_ADJUSTMENT_FACTOR = 0.239
 # Allow roughly ±23.9% size adjustment to keep each chapter balanced.
+# This range came from visual tuning against the fixed five-column page layout.
 MIN_BODY_SIZE = BODY_SIZE * (1.0 - FONT_SIZE_ADJUSTMENT_FACTOR)
 MAX_BODY_SIZE = BODY_SIZE * (1.0 + FONT_SIZE_ADJUSTMENT_FACTOR)
 HEADER_FONT = "Helvetica-Bold"
@@ -75,22 +76,26 @@ HEADER_SIZE = 9.5
 HEADER_SMALL_SIZE = 7.0
 
 # Tolerance around the midpoint when choosing a natural split boundary.
+# Measured in characters so nearby paragraph or sentence boundaries can win.
 SPLIT_RADIUS = 120
 MAX_SPLIT_ITERATIONS = 200
 FONT_SIZE_SEARCH_ITERATIONS = 12
 SECTION_FILL_TARGET_RATIO = 0.618
 TARGET_COMBINED_FILL_RATIO = SECTION_FILL_TARGET_RATIO * 2.0
 # Large enough to measure wrapped paragraph heights without affecting layout.
+# It stays well above a letter page so wrap() can report full paragraph height.
 MAX_LAYOUT_HEIGHT = 10_000
+# When a paragraph must be cut mid-sentence, take about one-sixth of the words.
 WORD_CHUNK_DIVISOR = 6
 CONTINUATION_MARKER = "—"
 
+# The source files only label chapters 1-81, so a one- or two-digit anchor is enough.
 CHAPTER_ANCHOR_RE = re.compile(
     r'<a\b[^>]*name\s*=\s*["\']?Kap(\d{1,2})["\']?[^>]*>',
     re.IGNORECASE,
 )
 
-# Replacement characters plus the ASCII control range that can appear in bad HTML extractions.
+# Replacement character plus C0 control bytes that should not survive HTML-to-text cleanup.
 _INVALID_TEXT_RE = re.compile(r"[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]")
 _SENTENCE_BOUNDARY_RE = re.compile(r'[.!?]["\')\]]*\s+')
 
@@ -141,6 +146,7 @@ def strip_html_to_text(fragment: str) -> str:
         if not line:
             lines.append("")
             continue
+        # Drop the navigation link text copied from the original HTML sources.
         if line.lower() == "up":
             continue
         lines.append(line)
@@ -271,6 +277,8 @@ def split_units(text: str) -> list[str]:
 
 def take_tail(text: str) -> tuple[str, str]:
     """Move the smallest sensible tail from a paragraph to the next section."""
+    if not text:
+        return "", ""
     units = split_units(text)
     if len(units) <= 1:
         words = text.split()
@@ -289,6 +297,8 @@ def take_tail(text: str) -> tuple[str, str]:
 
 def take_head(text: str) -> tuple[str, str]:
     """Move the smallest sensible head from a paragraph to the previous section."""
+    if not text:
+        return "", ""
     units = split_units(text)
     if len(units) <= 1:
         words = text.split()
@@ -361,6 +371,7 @@ def split_chapter_for_page(
     frame_w: float,
     frame_h: float,
     font_size: float,
+    chapter_number: int | None = None,
 ) -> tuple[list[str], list[str]]:
     """Split a chapter into top and bottom sections that both render."""
     units = chapter_units(chapter_text)
@@ -424,7 +435,8 @@ def split_chapter_for_page(
             continue
         break
     else:
-        warnings.warn("Chapter split refinement reached the iteration limit without a clean fit.")
+        chapter_label = f" in chapter {chapter_number}" if chapter_number is not None else ""
+        warnings.warn(f"Chapter split refinement reached the iteration limit without a clean fit{chapter_label}.")
     if not bottom and top:
         head, tail = take_tail(top[-1])
         if tail:
@@ -547,7 +559,7 @@ def build_pdf(output_path: Path) -> None:
                         low = mid
                     else:
                         high = mid
-            top, bottom = split_chapter_for_page(chapter_text, COLUMN_W, SECTION_H, font_size)
+            top, bottom = split_chapter_for_page(chapter_text, COLUMN_W, SECTION_H, font_size, chapter_number)
             page_data.append((translation, font_size, top, bottom))
         render_page(pdf, chapter_number, page_data)
 
