@@ -19,6 +19,7 @@ import html as html_lib
 import io
 import re
 import unicodedata
+import warnings
 from pathlib import Path
 from typing import Sequence
 
@@ -79,6 +80,7 @@ MAX_SPLIT_ITERATIONS = 200
 FONT_SIZE_SEARCH_ITERATIONS = 12
 SECTION_FILL_TARGET_RATIO = 0.618
 TARGET_COMBINED_FILL_RATIO = SECTION_FILL_TARGET_RATIO * 2.0
+# Large enough to measure wrapped paragraph heights without affecting layout.
 MAX_LAYOUT_HEIGHT = 10_000
 WORD_CHUNK_DIVISOR = 6
 CONTINUATION_MARKER = "—"
@@ -88,6 +90,7 @@ CHAPTER_ANCHOR_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Replacement characters plus the ASCII control range that can appear in bad HTML extractions.
 _INVALID_TEXT_RE = re.compile(r"[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]")
 _SENTENCE_BOUNDARY_RE = re.compile(r'[.!?]["\')\]]*\s+')
 
@@ -252,7 +255,7 @@ def sentence_units(text: str) -> list[str]:
     tail = text[start:].strip()
     if tail:
         units.append(tail)
-    return [unit for unit in units if unit]
+    return units
 
 
 def split_units(text: str) -> list[str]:
@@ -322,6 +325,7 @@ def natural_boundary_positions(text: str) -> list[tuple[int, int]]:
     for priority, pattern in patterns:
         for match in pattern.finditer(text):
             candidates.append((priority, match.end()))
+    # Prefer stronger boundaries first, then the one nearest the target, then the earliest.
     return candidates
 
 
@@ -330,6 +334,7 @@ def choose_split_position(text: str, target: int, radius: int = SPLIT_RADIUS) ->
     high = min(len(text), target + radius)
     candidates = [cand for cand in natural_boundary_positions(text) if low <= cand[1] <= high]
     if candidates:
+        # Sort by boundary strength first, then closeness to the target, then position.
         candidates.sort(key=lambda item: (item[0], abs(item[1] - target), item[1]))
         return candidates[0][1]
 
@@ -414,6 +419,8 @@ def split_chapter_for_page(
                 bottom.insert(0, tail)
             continue
         break
+    else:
+        warnings.warn("Chapter split refinement reached the iteration limit without a clean fit.")
     if not bottom and top:
         head, tail = take_tail(top[-1])
         if tail:
