@@ -205,7 +205,11 @@ def chapter_text_for_number(raw_html: str, chapter_number: int) -> str:
 
 
 def to_paragraphs(text: str) -> list[str]:
-    parts = [part.strip() for part in re.split(r"\n\s*\n", text) if part.strip()]
+    parts = [
+        re.sub(r"\s*\n\s*", " ", part).strip()
+        for part in re.split(r"\n\s*\n", text)
+        if part.strip()
+    ]
     return parts if parts else ([text.strip()] if text.strip() else [])
 
 
