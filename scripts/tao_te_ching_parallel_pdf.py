@@ -138,7 +138,7 @@ def strip_html_to_text(fragment: str) -> str:
 def sanitize_text(text: str) -> str:
     """Remove corrupted glyphs while preserving readable prose and diacritics."""
     text = unicodedata.normalize("NFKC", text)
-    text = _INVALID_TEXT_RE.sub("", text)
+    text = _INVALID_TEXT_RE.sub(" ", text)
     cleaned: list[str] = []
     for char in text:
         if char in "\n\r\t":
@@ -147,7 +147,10 @@ def sanitize_text(text: str) -> str:
         category = unicodedata.category(char)
         if category[0] in {"L", "N", "P", "Z", "M"}:
             cleaned.append(char)
+        else:
+            cleaned.append(" ")
     text = "".join(cleaned)
+    text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
