@@ -92,8 +92,8 @@ def extract_chapter_segments(raw_html: str) -> dict[int, str]:
 
 def strip_html_to_text(fragment: str) -> str:
     """Convert a chapter HTML fragment into normalized plain text."""
-    fragment = re.sub(r"(?is)<script\b.*?</script>", " ", fragment)
-    fragment = re.sub(r"(?is)<style\b.*?</style>", " ", fragment)
+    fragment = re.sub(r"(?is)<script\b.*?</script\s*>", " ", fragment)
+    fragment = re.sub(r"(?is)<style\b.*?</style\s*>", " ", fragment)
     fragment = fragment.replace("\r", "\n")
     fragment = re.sub(r"(?i)<br\s*/?>", "\n", fragment)
     fragment = re.sub(r"(?i)</p\s*>", "\n\n", fragment)
