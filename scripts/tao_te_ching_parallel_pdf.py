@@ -57,19 +57,27 @@ COLUMN_COUNT = 5
 TEXT_W = PAGE_W - (2 * MARGIN)
 TEXT_H = PAGE_H - (2 * MARGIN)
 COLUMN_W = (TEXT_W - (COLUMN_COUNT - 1) * GUTTER) / COLUMN_COUNT
+# Keep a fixed blank band between the upper and lower halves, matching the
+# reference fixed-layout PDF.
 MIDDLE_GAP = 0.42 * inch
 SECTION_H = (TEXT_H - MIDDLE_GAP) / 2.0
 
 BODY_FONT = "Times-Roman"
 BODY_SIZE = 10.0
 BODY_LEADING = 12.0
+# Allow roughly ±23.9% size adjustment to keep each chapter balanced.
 MIN_BODY_SIZE = BODY_SIZE * 0.761
 MAX_BODY_SIZE = BODY_SIZE * 1.239
 HEADER_FONT = "Helvetica-Bold"
 HEADER_SIZE = 9.5
 HEADER_SMALL_SIZE = 7.0
 
+# Tolerance around the midpoint when choosing a natural split boundary.
 SPLIT_RADIUS = 120
+MAX_SPLIT_ITERATIONS = 200
+FONT_SIZE_SEARCH_ITERATIONS = 12
+MIN_SECTION_FILL_RATIO = 0.618
+TARGET_COMBINED_FILL_RATIO = MIN_SECTION_FILL_RATIO * 2.0
 CONTINUATION_MARKER = "—"
 
 CHAPTER_ANCHOR_RE = re.compile(
@@ -98,8 +106,8 @@ def extract_chapter_segments(raw_html: str) -> dict[int, str]:
 
 def strip_html_to_text(fragment: str) -> str:
     """Convert a chapter HTML fragment into normalized plain text."""
-    fragment = re.sub(r"(?is)<script\b[^>]*>.*?<\s*/\s*script\s*>", " ", fragment)
-    fragment = re.sub(r"(?is)<style\b[^>]*>.*?<\s*/\s*style\s*>", " ", fragment)
+    fragment = _strip_tag_blocks(fragment, "script")
+    fragment = _strip_tag_blocks(fragment, "style")
     fragment = fragment.replace("\r", "\n")
     fragment = re.sub(r"(?i)<br\s*/?>", "\n", fragment)
     fragment = re.sub(r"(?i)</p\s*>", "\n\n", fragment)
@@ -133,6 +141,30 @@ def strip_html_to_text(fragment: str) -> str:
     text = "\n".join(lines)
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     return text
+
+
+def _strip_tag_blocks(fragment: str, tag: str) -> str:
+    """Remove an HTML tag block without relying on a risky regex tag filter."""
+    lower = fragment.lower()
+    open_tag = f"<{tag}"
+    close_tag = f"</{tag}"
+    search_from = 0
+    while True:
+        start = lower.find(open_tag, search_from)
+        if start == -1:
+            return fragment
+        start_end = fragment.find(">", start)
+        if start_end == -1:
+            return fragment[:start]
+        end = lower.find(close_tag, start_end + 1)
+        if end == -1:
+            return fragment[:start] + fragment[start_end + 1 :]
+        end_end = fragment.find(">", end)
+        if end_end == -1:
+            return fragment[:start] + fragment[end + len(close_tag) :]
+        fragment = fragment[:start] + fragment[end_end + 1 :]
+        lower = fragment.lower()
+        search_from = start
 
 
 def sanitize_text(text: str) -> str:
@@ -207,7 +239,7 @@ def sentence_units(text: str) -> list[str]:
     """Split text into sentence-like units while preserving punctuation."""
     units: list[str] = []
     start = 0
-    for match in re.finditer(r'[.!?]["\')\]]*\s+', text):
+    for match in re.finditer(r'[.!?]["\'”’)\]]*\s+', text):
         end = match.end()
         units.append(text[start:end].strip())
         start = end
@@ -339,7 +371,7 @@ def split_chapter_for_page(
     split_at = choose_split_position(flat, target)
     top = to_paragraphs(flat[:split_at].strip())
     bottom = to_paragraphs(flat[split_at:].strip())
-    for _ in range(200):
+    for _ in range(MAX_SPLIT_ITERATIONS):
         if top and bottom and fit_flowables(top, style, frame_w, frame_h) and fit_flowables(bottom, style, frame_w, frame_h):
             break
         if not top and bottom:
@@ -488,7 +520,7 @@ def build_pdf(output_path: Path) -> None:
                 low = size_low
                 high = size_high
                 font_size = high
-                for _ in range(12):
+                for _ in range(FONT_SIZE_SEARCH_ITERATIONS):
                     mid = (low + high) / 2.0
                     mid_total = measure(mid)
                     font_size = mid
