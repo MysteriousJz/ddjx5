@@ -189,6 +189,17 @@ def rendered_height(paragraphs: Sequence[str], style: ParagraphStyle, frame_w: f
     return total
 
 
+def cumulative_heights(paragraphs: Sequence[str], style: ParagraphStyle, frame_w: float) -> list[float]:
+    total = 0.0
+    heights: list[float] = []
+    for paragraph in paragraphs:
+        flowable = Paragraph(paragraph_markup(paragraph), style)
+        _, height = flowable.wrap(frame_w, 10_000)
+        total += height
+        heights.append(total)
+    return heights
+
+
 def sentence_units(text: str) -> list[str]:
     """Split text into sentence-like units while preserving punctuation."""
     units: list[str] = []
@@ -306,29 +317,18 @@ def split_chapter_for_page(
         return ([head] if head else [units[0]], [tail] if tail else [])
 
     style = style_for_size(font_size)
-    best: tuple[float, int, list[str], list[str]] | None = None
-
+    heights = cumulative_heights(units, style, frame_w)
+    total_height = heights[-1]
+    target = total_height / 2.0
+    valid_splits: list[tuple[float, int]] = []
     for split_index in range(1, len(units)):
-        top = units[:split_index]
-        bottom = units[split_index:]
-        if not top or not bottom:
-            continue
-        if not fit_flowables(top, style, frame_w, frame_h):
-            continue
-        if not fit_flowables(bottom, style, frame_w, frame_h):
-            continue
-
-        top_height = rendered_height(top, style, frame_w)
-        bottom_height = rendered_height(bottom, style, frame_w)
-        balance = abs(top_height - bottom_height)
-        fill_penalty = abs(max(top_height, bottom_height) / frame_h - 0.618)
-        score = balance + fill_penalty * frame_h
-        candidate = (score, split_index, top, bottom)
-        if best is None or candidate < best:
-            best = candidate
-
-    if best is not None:
-        return best[2], best[3]
+        top_height = heights[split_index - 1]
+        bottom_height = total_height - top_height
+        if top_height <= frame_h and bottom_height <= frame_h:
+            valid_splits.append((abs(top_height - target), split_index))
+    if valid_splits:
+        _, split_index = min(valid_splits)
+        return units[:split_index], units[split_index:]
 
     # Fallback: refine a midpoint split until it fits both halves.
     flat = "\n\n".join(to_paragraphs(chapter_text))
@@ -467,30 +467,33 @@ def build_pdf(output_path: Path) -> None:
             if chapter_number not in chapter_map:
                 raise ValueError(f"{translation} is missing chapter {chapter_number}")
             chapter_text = chapter_map[chapter_number]
-            best_layout = None
-            font_sizes = [round(MAX_BODY_SIZE - step * 0.25, 3) for step in range(int((MAX_BODY_SIZE - MIN_BODY_SIZE) / 0.25) + 1)]
-            for font_size in font_sizes:
-                top, bottom = split_chapter_for_page(chapter_text, COLUMN_W, SECTION_H, font_size)
-                if not top or not bottom:
-                    continue
-                style = style_for_size(font_size)
-                if not fit_flowables(top, style, COLUMN_W, SECTION_H):
-                    continue
-                if not fit_flowables(bottom, style, COLUMN_W, SECTION_H):
-                    continue
-                top_fill = rendered_height(top, style, COLUMN_W) / SECTION_H
-                bottom_fill = rendered_height(bottom, style, COLUMN_W) / SECTION_H
-                balance = abs(top_fill - bottom_fill)
-                fill_distance = abs(min(top_fill, bottom_fill) - 0.618)
-                score = balance + fill_distance
-                candidate = (score, font_size, top, bottom)
-                if best_layout is None or candidate < best_layout:
-                    best_layout = candidate
-            if best_layout is None:
-                top, bottom = split_chapter_for_page(chapter_text, COLUMN_W, SECTION_H, BODY_SIZE)
-                font_size = BODY_SIZE
+            units = chapter_units(chapter_text)
+            size_low = MIN_BODY_SIZE
+            size_high = MAX_BODY_SIZE
+            target_total = SECTION_H * 1.236
+
+            def measure(size: float) -> float:
+                return rendered_height(units, style_for_size(size), COLUMN_W)
+
+            low_total = measure(size_low)
+            high_total = measure(size_high)
+            if target_total <= low_total:
+                font_size = size_low
+            elif target_total >= high_total:
+                font_size = size_high
             else:
-                _, font_size, top, bottom = best_layout
+                low = size_low
+                high = size_high
+                font_size = high
+                for _ in range(12):
+                    mid = (low + high) / 2.0
+                    mid_total = measure(mid)
+                    font_size = mid
+                    if mid_total < target_total:
+                        low = mid
+                    else:
+                        high = mid
+            top, bottom = split_chapter_for_page(chapter_text, COLUMN_W, SECTION_H, font_size)
             page_data.append((translation, font_size, top, bottom))
         render_page(pdf, chapter_number, page_data)
 
