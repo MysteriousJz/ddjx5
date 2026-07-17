@@ -78,6 +78,7 @@ MAX_SPLIT_ITERATIONS = 200
 FONT_SIZE_SEARCH_ITERATIONS = 12
 MIN_SECTION_FILL_RATIO = 0.618
 TARGET_COMBINED_FILL_RATIO = MIN_SECTION_FILL_RATIO * 2.0
+MAX_LAYOUT_HEIGHT = 10_000
 CONTINUATION_MARKER = "—"
 
 CHAPTER_ANCHOR_RE = re.compile(
@@ -86,6 +87,7 @@ CHAPTER_ANCHOR_RE = re.compile(
 )
 
 _INVALID_TEXT_RE = re.compile(r"[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]")
+SENTENCE_BOUNDARY_RE = re.compile(r'[.!?]["\'”’)\]]*\s+')
 
 
 def read_text(path: Path) -> str:
@@ -219,7 +221,7 @@ def rendered_height(paragraphs: Sequence[str], style: ParagraphStyle, frame_w: f
     total = 0.0
     for paragraph in paragraphs:
         flowable = Paragraph(paragraph_markup(paragraph), style)
-        _, height = flowable.wrap(frame_w, 10_000)
+        _, height = flowable.wrap(frame_w, MAX_LAYOUT_HEIGHT)
         total += height
     return total
 
@@ -229,7 +231,7 @@ def cumulative_heights(paragraphs: Sequence[str], style: ParagraphStyle, frame_w
     heights: list[float] = []
     for paragraph in paragraphs:
         flowable = Paragraph(paragraph_markup(paragraph), style)
-        _, height = flowable.wrap(frame_w, 10_000)
+        _, height = flowable.wrap(frame_w, MAX_LAYOUT_HEIGHT)
         total += height
         heights.append(total)
     return heights
@@ -239,7 +241,7 @@ def sentence_units(text: str) -> list[str]:
     """Split text into sentence-like units while preserving punctuation."""
     units: list[str] = []
     start = 0
-    for match in re.finditer(r'[.!?]["\'”’)\]]*\s+', text):
+    for match in SENTENCE_BOUNDARY_RE.finditer(text):
         end = match.end()
         units.append(text[start:end].strip())
         start = end
@@ -307,7 +309,7 @@ def natural_boundary_positions(text: str) -> list[tuple[int, int]]:
     candidates: list[tuple[int, int]] = []
     patterns = [
         (0, re.compile(r"\n\s*\n+")),
-        (1, re.compile(r'[.!?]["\')\]]*\s+')),
+        (1, SENTENCE_BOUNDARY_RE),
         (2, re.compile(r"[,;:]\s+")),
         (3, re.compile(r"\s+")),
     ]
@@ -505,7 +507,7 @@ def build_pdf(output_path: Path) -> None:
             units = chapter_units(chapter_text)
             size_low = MIN_BODY_SIZE
             size_high = MAX_BODY_SIZE
-            target_total = SECTION_H * 1.236
+            target_total = SECTION_H * TARGET_COMBINED_FILL_RATIO
 
             def measure(size: float) -> float:
                 return rendered_height(units, style_for_size(size), COLUMN_W)
