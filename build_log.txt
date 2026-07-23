@@ -1,0 +1,124 @@
+2026-07-23 22:12:37,509 | INFO | Starting Tao Te Ching build
+2026-07-23 22:12:37,510 | INFO | Output log: build_log.txt
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Sanderson Beck - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Archie J. Bahm - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching by Anonymous - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Aleister Crowley - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Das Tao Te King von George Cronk.html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Stephen Addiss & Stanley Lombardo - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Raymond B. Blakney, Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by David Bullen - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by David Hong Cheng - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Ellen Marie Chen - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Thomas Cleary - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Derek Bryce - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Jim Clatfelder, Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Tormond Byrn, Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Tao Te Ching, English by Wing-Tsit Chan - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,510 | INFO | Loaded source: Das Tao Te King von Dwight Goddard.html
+2026-07-23 22:12:37,511 | INFO | Loaded source: Das Tao Te King von Walter Gorn-Old.html
+2026-07-23 22:12:37,511 | INFO | Loaded source: Tao Te Ching by Witter Bynner, Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,511 | INFO | Loaded source: Tao Te Ching, English by Chou-Wing Chohan - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,511 | INFO | Loaded source: Tao Te Ching, English by Chao-Hsiu Chen - Terebess Asia Online (TAO).html
+2026-07-23 22:12:37,511 | INFO | Parsing Addiss & Lombardo
+2026-07-23 22:12:37,556 | INFO | Addiss & Lombardo: parsed via anchor fragments
+2026-07-23 22:12:37,556 | INFO | Parsing Aleister Crowley
+2026-07-23 22:12:37,608 | INFO | Aleister Crowley: parsed via anchor fragments
+2026-07-23 22:12:37,608 | INFO | Parsing Anonymous
+2026-07-23 22:12:37,668 | INFO | Anonymous: parsed via anchor fragments
+2026-07-23 22:12:37,668 | INFO | Parsing Archie J. Bahm
+2026-07-23 22:12:37,715 | INFO | Archie J. Bahm: parsed via anchor fragments
+2026-07-23 22:12:37,715 | INFO | Parsing Chao-Hsiu Chen
+2026-07-23 22:12:37,771 | INFO | Chao-Hsiu Chen: parsed via anchor fragments
+2026-07-23 22:12:37,771 | INFO | Parsing Chou-Wing Chohan
+2026-07-23 22:12:37,837 | INFO | Chou-Wing Chohan: parsed via anchor fragments
+2026-07-23 22:12:37,837 | INFO | Parsing David Bullen
+2026-07-23 22:12:37,876 | INFO | David Bullen: parsed via anchor fragments
+2026-07-23 22:12:37,876 | INFO | Parsing David Hong Cheng
+2026-07-23 22:12:37,936 | INFO | David Hong Cheng: parsed via anchor fragments
+2026-07-23 22:12:37,936 | INFO | Parsing Derek Bryce
+2026-07-23 22:12:37,983 | INFO | Derek Bryce: parsed via anchor fragments
+2026-07-23 22:12:37,983 | INFO | Parsing Dwight Goddard
+2026-07-23 22:12:38,028 | INFO | Dwight Goddard: parsed via anchor fragments
+2026-07-23 22:12:38,028 | INFO | Parsing Ellen Marie Chen
+2026-07-23 22:12:38,096 | INFO | Ellen Marie Chen: parsed via anchor fragments
+2026-07-23 22:12:38,096 | INFO | Parsing George Cronk
+2026-07-23 22:12:38,148 | INFO | George Cronk: parsed via anchor fragments
+2026-07-23 22:12:38,148 | INFO | Parsing Jim Clatfelder
+2026-07-23 22:12:38,205 | INFO | Jim Clatfelder: parsed via anchor fragments
+2026-07-23 22:12:38,205 | INFO | Parsing Raymond B. Blakney
+2026-07-23 22:12:38,267 | INFO | Raymond B. Blakney: parsed via anchor fragments
+2026-07-23 22:12:38,268 | INFO | Parsing Sanderson Beck
+2026-07-23 22:12:38,328 | INFO | Sanderson Beck: parsed via anchor fragments
+2026-07-23 22:12:38,328 | INFO | Parsing Thomas Cleary
+2026-07-23 22:12:38,392 | INFO | Thomas Cleary: parsed via anchor fragments
+2026-07-23 22:12:38,392 | INFO | Parsing Tormond Byrn
+2026-07-23 22:12:38,450 | INFO | Tormond Byrn: parsed via anchor fragments
+2026-07-23 22:12:38,450 | INFO | Parsing Walter Gorn-Old
+2026-07-23 22:12:38,494 | INFO | Walter Gorn-Old: parsed via anchor fragments
+2026-07-23 22:12:38,494 | INFO | Parsing Wing-Tsit Chan
+2026-07-23 22:12:38,541 | INFO | Wing-Tsit Chan: parsed via anchor fragments
+2026-07-23 22:12:38,541 | INFO | Parsing Witter Bynner
+2026-07-23 22:12:38,606 | INFO | Witter Bynner: parsed via anchor fragments
+2026-07-23 22:12:38,607 | INFO | Addiss & Lombardo: validation passed, 81 chapters found
+2026-07-23 22:12:38,607 | INFO | Aleister Crowley: validation passed, 81 chapters found
+2026-07-23 22:12:38,607 | INFO | Anonymous: validation passed, 81 chapters found
+2026-07-23 22:12:38,608 | INFO | Archie J. Bahm: validation passed, 81 chapters found
+2026-07-23 22:12:38,608 | INFO | Chao-Hsiu Chen: validation passed, 81 chapters found
+2026-07-23 22:12:38,608 | INFO | Chou-Wing Chohan: validation passed, 81 chapters found
+2026-07-23 22:12:38,608 | INFO | David Bullen: validation passed, 81 chapters found
+2026-07-23 22:12:38,609 | INFO | David Hong Cheng: validation passed, 81 chapters found
+2026-07-23 22:12:38,609 | INFO | Derek Bryce: validation passed, 81 chapters found
+2026-07-23 22:12:38,609 | INFO | Dwight Goddard: validation passed, 81 chapters found
+2026-07-23 22:12:38,609 | INFO | Ellen Marie Chen: validation passed, 81 chapters found
+2026-07-23 22:12:38,610 | INFO | George Cronk: validation passed, 81 chapters found
+2026-07-23 22:12:38,610 | INFO | Jim Clatfelder: validation passed, 81 chapters found
+2026-07-23 22:12:38,611 | INFO | Raymond B. Blakney: validation passed, 81 chapters found
+2026-07-23 22:12:38,611 | INFO | Sanderson Beck: validation passed, 81 chapters found
+2026-07-23 22:12:38,611 | INFO | Thomas Cleary: validation passed, 81 chapters found
+2026-07-23 22:12:38,612 | INFO | Tormond Byrn: validation passed, 81 chapters found
+2026-07-23 22:12:38,612 | INFO | Walter Gorn-Old: validation passed, 81 chapters found
+2026-07-23 22:12:38,612 | INFO | Wing-Tsit Chan: validation passed, 81 chapters found
+2026-07-23 22:12:38,613 | INFO | Witter Bynner: validation passed, 81 chapters found
+2026-07-23 22:12:38,613 | INFO | Addiss & Lombardo: wrote Addiss_and_Lombardo.txt
+2026-07-23 22:12:38,613 | INFO | Aleister Crowley: wrote Aleister_Crowley.txt
+2026-07-23 22:12:38,613 | INFO | Anonymous: wrote Anonymous.txt
+2026-07-23 22:12:38,614 | INFO | Archie J. Bahm: wrote Archie_J._Bahm.txt
+2026-07-23 22:12:38,614 | INFO | Chao-Hsiu Chen: wrote Chao_Hsiu_Chen.txt
+2026-07-23 22:12:38,614 | INFO | Chou-Wing Chohan: wrote Chou_Wing_Chohan.txt
+2026-07-23 22:12:38,614 | INFO | David Bullen: wrote David_Bullen.txt
+2026-07-23 22:12:38,615 | INFO | David Hong Cheng: wrote David_Hong_Cheng.txt
+2026-07-23 22:12:38,615 | INFO | Derek Bryce: wrote Derek_Bryce.txt
+2026-07-23 22:12:38,615 | INFO | Dwight Goddard: wrote Dwight_Goddard.txt
+2026-07-23 22:12:38,615 | INFO | Ellen Marie Chen: wrote Ellen_Marie_Chen.txt
+2026-07-23 22:12:38,616 | INFO | George Cronk: wrote George_Cronk.txt
+2026-07-23 22:12:38,616 | INFO | Jim Clatfelder: wrote Jim_Clatfelder.txt
+2026-07-23 22:12:38,616 | INFO | Raymond B. Blakney: wrote Raymond_B._Blakney.txt
+2026-07-23 22:12:38,616 | INFO | Sanderson Beck: wrote Sanderson_Beck.txt
+2026-07-23 22:12:38,616 | INFO | Thomas Cleary: wrote Thomas_Cleary.txt
+2026-07-23 22:12:38,617 | INFO | Tormond Byrn: wrote Tormond_Byrn.txt
+2026-07-23 22:12:38,617 | INFO | Walter Gorn-Old: wrote Walter_Gorn_Old.txt
+2026-07-23 22:12:38,617 | INFO | Wing-Tsit Chan: wrote Wing_Tsit_Chan.txt
+2026-07-23 22:12:38,617 | INFO | Witter Bynner: wrote Witter_Bynner.txt
+2026-07-23 22:12:38,617 | INFO | Exported 20 text files
+2026-07-23 22:12:38,618 | INFO | Generating PDF: Book_1_Beck_Bahm_Anonymous_Crowley_Cronk.pdf
+2026-07-23 22:12:49,162 | WARNING | Aleister Crowley chapter 1: using smallest font and best-effort split
+2026-07-23 22:15:12,680 | INFO | Generated Book_1_Beck_Bahm_Anonymous_Crowley_Cronk.pdf (0.25 MB)
+2026-07-23 22:15:12,680 | INFO | Generating PDF: Book_2_Addiss_Blakney_Bullen_Cheng_Chen.pdf
+2026-07-23 22:17:22,908 | INFO | Generated Book_2_Addiss_Blakney_Bullen_Cheng_Chen.pdf (0.24 MB)
+2026-07-23 22:17:22,909 | INFO | Generating PDF: Book_3_Cleary_Bryce_Clatfelder_Byrn_Chan.pdf
+2026-07-23 22:17:32,683 | WARNING | Tormond Byrn chapter 2: using smallest font and best-effort split
+2026-07-23 22:19:18,710 | WARNING | Tormond Byrn chapter 38: using smallest font and best-effort split
+2026-07-23 22:19:36,654 | WARNING | Tormond Byrn chapter 39: using smallest font and best-effort split
+2026-07-23 22:19:56,917 | WARNING | Tormond Byrn chapter 41: using smallest font and best-effort split
+2026-07-23 22:20:22,053 | WARNING | Tormond Byrn chapter 51: using smallest font and best-effort split
+2026-07-23 22:20:36,300 | WARNING | Tormond Byrn chapter 54: using smallest font and best-effort split
+2026-07-23 22:20:56,015 | WARNING | Tormond Byrn chapter 58: using smallest font and best-effort split
+2026-07-23 22:21:28,485 | WARNING | Tormond Byrn chapter 64: using smallest font and best-effort split
+2026-07-23 22:21:54,774 | INFO | Generated Book_3_Cleary_Bryce_Clatfelder_Byrn_Chan.pdf (0.26 MB)
+2026-07-23 22:21:54,774 | INFO | Generating PDF: Book_4_Goddard_Gorn_Bynner_Chohan_Chen.pdf
+2026-07-23 22:22:23,451 | WARNING | Chou-Wing Chohan chapter 20: using smallest font and best-effort split
+2026-07-23 22:23:35,661 | WARNING | Chou-Wing Chohan chapter 39: using smallest font and best-effort split
+2026-07-23 22:24:43,697 | WARNING | Witter Bynner chapter 81: using smallest font and best-effort split
+2026-07-23 22:24:43,784 | INFO | Generated Book_4_Goddard_Gorn_Bynner_Chohan_Chen.pdf (0.25 MB)
+2026-07-23 22:24:43,784 | INFO | Build complete
