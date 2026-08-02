@@ -1,0 +1,39 @@
+Tao Te Ching Expansion Report
+
+Total HTML files scanned: 108
+Total translations discovered: 104
+Successfully parsed translations: 96
+Total text files exported: 96
+Total mega chapter files written: 81
+Processing time: 1533.13s
+
+Original books used translators:
+- Book_1_Beck_Bahm_Anonymous_Crowley_Cronk.pdf: Sanderson Beck, Archie J. Bahm, Anonymous, Aleister Crowley, George Cronk
+- Book_2_Addiss_Blakney_Bullen_Cheng_Chen.pdf: Addiss & Lombardo, Raymond B. Blakney, David Bullen, David Hong Cheng, Ellen Marie Chen
+- Book_3_Cleary_Bryce_Clatfelder_Byrn_Chan.pdf: Thomas Cleary, Derek Bryce, Jim Clatfelder, Tormond Byrn, Wing-Tsit Chan
+- Book_4_Goddard_Gorn_Bynner_Chohan_Chen.pdf: Dwight Goddard, Walter Gorn-Old, Witter Bynner, Chou-Wing Chohan, Chao-Hsiu Chen
+
+Books 5-8 used translators:
+- Book 5: Aalar Fex, Agnieszka Solska, Alan B. Taplow, Alan Sheets & Barbara Tovey, Andre Gauthier
+- Book 6: Arthur Waley, Bart Marshall, Bradford Hatcher, Bram den Hond, Brian Browne Walker
+- Book 7: Brian Donohue, C. Ganson, C. Spurgeon Medhurst, Ch'u Ta-Kao, Chad Hansen
+- Book 8: Chang Chung-yuan, Chichung Huang, D. C. Lau, D.T. Suzuki & Paul Carus, David H. Li
+
+Skipped files:
+- Daode jing 道德經.html: translator name could not be parsed from filename
+- THE TAO TE CHING. (The Principle of Nature and Its Attrib... _ Internet Sacred Text Archive.html: translator name could not be parsed from filename
+- Tao Te Ching, English by - Terebess Asia Online (TAO).html: translator name was empty after cleanup
+- Wayback Machine.html: filename does not look like a Tao Te Ching translation
+
+Parse failures:
+- Tao Te Ching, English by David Tuffley - Terebess Asia Online (TAO).html (David Tuffley): validation failed
+- Tao Te Ching, English by Eiichi Shimomissé - Terebess Asia Online (TAO).html (Eiichi Shimomissé): validation failed
+- Tao Te Ching, English by Kwok, Palmer, Ramsay, Terebess Asia Online (TAO).html (Kwok, Palmer, Ramsay): validation failed
+- The Project Gutenberg eBook of Dao De Jing, by Lao Zi.html (Lao Zi): validation failed
+- Tao Te Ching, English by Lin Yutang, Terebess Asia Online (TAO).html (Lin Yutang): validation failed
+- Tao Te Ching, English by Ned Ludd, Terebess Asia Online (TAO).html (Ned Ludd): validation failed
+- Das Tao Te King von R.L. Wing.html (R.L. Wing): validation failed
+- Tao Te Ching, English by Tam C. Gibbs Terebess Asia Online (TAO).html (Tam C. Gibbs): validation failed
+
+Warnings:
+- See skipped files and parse failures above.
