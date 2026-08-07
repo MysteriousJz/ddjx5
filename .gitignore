@@ -1,0 +1,15 @@
+# Generated output files
+tao_te_ching_bound.pdf
+split_proof_ch*.pdf
+*_ch*_top.txt
+*_ch*_bottom.txt
+__pycache__/
+*.pyc
+
+# tao_normalize.py output
+*_normalized.json
+
+# tao_audio.py output
+audio/
+*.wav
+*.mp3
