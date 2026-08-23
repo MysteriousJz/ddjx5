@@ -140,7 +140,7 @@ def _synthesize(voice, text: str, speed: float) -> tuple[bytes, int, int, int]:
 
 
 def build_audiobook(chinese: dict[int, list[str]], english: dict[int, list[str]],
-                    voices, output: Path, slow_english: bool, title: str,
+                    voices, output: Path, slow_mode_target: str, title: str,
                     chapters: list[int]) -> None:
     """Stream one audiobook to a temporary WAV, then encode tagged MP3."""
     import io
@@ -154,8 +154,8 @@ def build_audiobook(chinese: dict[int, list[str]], english: dict[int, list[str]]
             for chapter in chapters:
                 for zh, en in pair_verses(chinese[chapter], english[chapter]):
                     for text, speed, voice in (
-                        (zh, CHINESE_SPEED if not slow_english else 1.0, voices[0]),
-                        (en, ENGLISH_SPEED if not slow_english else CHINESE_SPEED, voices[1]),
+                        (zh, 1.0 if slow_mode_target == "english" else CHINESE_SPEED, voices[0]),
+                        (en, CHINESE_SPEED if slow_mode_target == "english" else ENGLISH_SPEED, voices[1]),
                     ):
                         try:
                             frames, rate, width, channels = _synthesize(voice, text, speed)
@@ -170,7 +170,9 @@ def build_audiobook(chinese: dict[int, list[str]], english: dict[int, list[str]]
                                 wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(SAMPLE_RATE)
                             wav.writeframes(_silence(0.5, wav.getsampwidth(), wav.getnchannels()))
                         wav.writeframes(_silence(PAUSE_BETWEEN_VERSES, wav.getsampwidth(), wav.getnchannels()))
-                wav.writeframes(_silence(PAUSE_BETWEEN_CHAPTERS, wav.getsampwidth(), wav.getnchannels()))
+                if first is not None:
+                    wav.writeframes(_silence(PAUSE_BETWEEN_CHAPTERS,
+                                             wav.getsampwidth(), wav.getnchannels()))
         audio = AudioSegment.from_wav(str(temp_path)).set_frame_rate(SAMPLE_RATE).set_channels(1)
         if audio.max_dBFS != float("-inf"):
             audio = audio.apply_gain(-3.0 - audio.max_dBFS)
@@ -205,14 +207,14 @@ def main() -> None:
     zh_voice, en_voice = _load_voice(args.chinese_model), _load_voice(args.english_model)
     chapters = args.chapters or list(range(1, 82))
     for key, (name, _) in TRANSLATIONS.items():
-        for slow_english, suffix in ((False, "english_normal_chinese_slow"),
-                                     (True, "chinese_normal_english_slow")):
+        for slow_mode_target, suffix in (("chinese", "english_normal_chinese_slow"),
+                                         ("english", "chinese_normal_english_slow")):
             # A subset is intentionally supported for validation, but production
             # output always uses the complete 81-chapter sequence.
             zh_data = {n: chinese[n] for n in chapters}
             en_data = {n: english[key][n] for n in chapters}
             output = args.output_dir / f"{key}_{suffix}.mp3"
-            build_audiobook(zh_data, en_data, (zh_voice, en_voice), output, slow_english,
+            build_audiobook(zh_data, en_data, (zh_voice, en_voice), output, slow_mode_target,
                             f"Tao Te Ching - {name} - {suffix}", chapters)
 
 
