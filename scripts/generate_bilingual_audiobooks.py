@@ -154,7 +154,7 @@ def build_audiobook(chinese: dict[int, list[str]], english: dict[int, list[str]]
             for chapter in chapters:
                 for zh, en in pair_verses(chinese[chapter], english[chapter]):
                     for text, speed, voice in (
-                        (zh, 1.0 if slow_mode_target == "english" else CHINESE_SPEED, voices[0]),
+                        (zh, ENGLISH_SPEED if slow_mode_target == "english" else CHINESE_SPEED, voices[0]),
                         (en, CHINESE_SPEED if slow_mode_target == "english" else ENGLISH_SPEED, voices[1]),
                     ):
                         try:
