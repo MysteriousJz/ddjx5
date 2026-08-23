@@ -90,8 +90,14 @@ def extract_english(path: Path) -> dict[int, list[str]]:
         line = raw.strip()
         match = re.fullmatch(r"(\d{1,2})\.?", line)
         if match and 1 <= int(match.group(1)) <= 81:
-            current = int(match.group(1))
-            chapters[current] = []
+            chapter = int(match.group(1))
+            # Some exports contain an appended, alternate edition.  Keep the
+            # first complete occurrence rather than replacing it.
+            if chapter in chapters:
+                current = None
+            else:
+                current = chapter
+                chapters[current] = []
         elif current is not None and line:
             chapters[current].append(line)
     return {n: _split(" ".join(chapters.get(n, [])), ".;") for n in range(1, 82)}
