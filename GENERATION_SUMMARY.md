@@ -5,6 +5,19 @@ This project generates 4 complete Tao Te Ching books and exports all 20 translat
 
 ## Generated Files
 
+### Bilingual Audiobooks
+`scripts/generate_bilingual_audiobooks.py` creates exactly six MP3 files:
+three English editions (Arthur Waley, D.C. Lau, and Stephen Mitchell), each
+paired with the same Chinese Text Project source. For every edition it creates:
+
+- `<edition>_english_normal_chinese_slow.mp3`
+- `<edition>_chinese_normal_english_slow.mp3`
+
+Both files contain all 81 chapters. The first reads English at normal speed
+and Chinese slowly; the second reads Chinese at normal speed and English
+slowly. Run `python3 scripts/generate_bilingual_audiobooks.py` to create them
+under `output/`.
+
 ### PDF Books (4 books with 5 parallel translations each)
 1. **Book_1_Beck_Bahm_Anonymous_Crowley_Cronk.pdf**
    - Sanderson Beck

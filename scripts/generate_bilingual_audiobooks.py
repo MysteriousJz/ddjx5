@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the six bilingual Tao Te Ching audiobooks.
+"""Generate six bilingual Tao Te Ching audiobooks from three English editions.
 
 The script deliberately keeps extraction and synthesis separate so the text can
-be checked without loading Piper.  It uses the Chinese Text Project HTML and
-the plain-text exports already present in ``txt_exports``.
+be checked without loading Piper.  Every audiobook uses the same Chinese Text
+Project source, paired with one of the three English exports below.
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ TRANSLATIONS = {
     "dc_lau": ("D.C. Lau", ROOT / "txt_exports/D_C_Lau.txt"),
     "stephen_mitchell": ("Stephen Mitchell", ROOT / "txt_exports/Stephen_Mitchell.txt"),
 }
+EXPECTED_TRANSLATION_COUNT = 3
 CHINESE_SPEED = 0.7
 ENGLISH_SPEED = 1.0
 PAUSE_BETWEEN_VERSES = 0.3
@@ -200,6 +201,11 @@ def main() -> None:
                         help="Optional chapter subset for a quick test.")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    if len(TRANSLATIONS) != EXPECTED_TRANSLATION_COUNT:
+        raise SystemExit(
+            f"Expected exactly {EXPECTED_TRANSLATION_COUNT} English editions; "
+            f"configured {len(TRANSLATIONS)}"
+        )
     chinese = extract_chinese()
     english = {key: extract_english(path) for key, (_, path) in TRANSLATIONS.items()}
     if len([n for n in chinese if chinese[n]]) != 81:
