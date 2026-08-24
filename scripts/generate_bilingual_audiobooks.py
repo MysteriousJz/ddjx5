@@ -171,7 +171,7 @@ def build_audiobook(chinese: dict[int, list[str]], english: dict[int, list[str]]
                                 first = (b"", SAMPLE_RATE, 2, 1)
                                 wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(SAMPLE_RATE)
                             wav.writeframes(_silence(0.5, wav.getsampwidth(), wav.getnchannels()))
-                        if segment_index == 0 or verse_index < len(verses) - 1:
+                        if segment_index == 1 and verse_index < len(verses) - 1:
                             wav.writeframes(_silence(PAUSE_BETWEEN_VERSES,
                                                      wav.getsampwidth(), wav.getnchannels()))
                 if first is not None and chapter_index < len(chapters) - 1:
