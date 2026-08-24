@@ -12,4 +12,6 @@ __pycache__/
 # tao_audio.py output
 audio/
 *.wav
+# Generated audiobooks are intentionally committed for listening.
 *.mp3
+!output/*.mp3
