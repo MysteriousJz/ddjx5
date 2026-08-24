@@ -26,8 +26,8 @@ TRANSLATIONS = {
     "stephen_mitchell": ("Stephen Mitchell", ROOT / "txt_exports/Stephen_Mitchell.txt"),
 }
 EXPECTED_TRANSLATION_COUNT = 3
-CHINESE_SPEED = 0.7
-ENGLISH_SPEED = 1.0
+SLOW_SPEED = 0.7
+NORMAL_SPEED = 1.0
 PAUSE_BETWEEN_VERSES = 0.3
 PAUSE_BETWEEN_CHAPTERS = 1.0
 SAMPLE_RATE = 22050
@@ -152,12 +152,13 @@ def build_audiobook(chinese: dict[int, list[str]], english: dict[int, list[str]]
         temp_path = Path(tmp.name)
     try:
         with wave.open(str(temp_path), "wb") as wav:
-            for chapter in chapters:
-                for zh, en in pair_verses(chinese[chapter], english[chapter]):
-                    for text, speed, voice in (
-                        (zh, ENGLISH_SPEED if slow_mode_target == "english" else CHINESE_SPEED, voices[0]),
-                        (en, CHINESE_SPEED if slow_mode_target == "english" else ENGLISH_SPEED, voices[1]),
-                    ):
+            for chapter_index, chapter in enumerate(chapters):
+                verses = pair_verses(chinese[chapter], english[chapter])
+                for verse_index, (zh, en) in enumerate(verses):
+                    for segment_index, (text, speed, voice) in enumerate((
+                        (zh, SLOW_SPEED if slow_mode_target == "chinese" else NORMAL_SPEED, voices[0]),
+                        (en, SLOW_SPEED if slow_mode_target == "english" else NORMAL_SPEED, voices[1]),
+                    )):
                         try:
                             frames, rate, width, channels = _synthesize(voice, text, speed)
                             if first is None:
@@ -170,8 +171,10 @@ def build_audiobook(chinese: dict[int, list[str]], english: dict[int, list[str]]
                                 first = (b"", SAMPLE_RATE, 2, 1)
                                 wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(SAMPLE_RATE)
                             wav.writeframes(_silence(0.5, wav.getsampwidth(), wav.getnchannels()))
-                        wav.writeframes(_silence(PAUSE_BETWEEN_VERSES, wav.getsampwidth(), wav.getnchannels()))
-                if first is not None:
+                        if segment_index == 0 or verse_index < len(verses) - 1:
+                            wav.writeframes(_silence(PAUSE_BETWEEN_VERSES,
+                                                     wav.getsampwidth(), wav.getnchannels()))
+                if first is not None and chapter_index < len(chapters) - 1:
                     wav.writeframes(_silence(PAUSE_BETWEEN_CHAPTERS,
                                              wav.getsampwidth(), wav.getnchannels()))
         audio = AudioSegment.from_wav(str(temp_path)).set_frame_rate(SAMPLE_RATE).set_channels(1)
